@@ -29,4 +29,4 @@ The extension icon is taken from [Clear Browsing Data](https://github.com/dessan
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [GPL-3.0](LICENSE).
