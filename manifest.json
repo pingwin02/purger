@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Purger",
+  "version": "1.0",
+  "description": "Purges browsing data, optionally logs out from Google, closes all other tabs, and shows a notification.",
+  "permissions": [
+    "browsingData",
+    "notifications",
+    "windows",
+    "tabs",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": ["https://accounts.google.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Purger",
+    "default_icon": {
+      "128": "icon.png"
+    }
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "options_page": "options.html"
+}
