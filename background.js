@@ -6,6 +6,7 @@ function purge(callback) {
     {
       appcache: true,
       cache: true,
+      cacheStorage: true,
       cookies: true,
       downloads: true,
       fileSystems: true,
@@ -15,7 +16,7 @@ function purge(callback) {
       localStorage: true,
       pluginData: true,
       serviceWorkers: true,
-      cacheStorage: true,
+      webSQL: true,
     },
     function () {
       if (chrome.runtime.lastError)
