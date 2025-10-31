@@ -60,8 +60,12 @@ function openLogoutAndClose(callback) {
 
 function closeOtherTabs(callback) {
   chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
+    if (!tabs || !tabs[0]) {
+      if (callback) callback();
+      return;
+    }
     const currentTabId = tabs[0].id;
-    chrome.tabs.query({ currentWindow: true }, function (allTabs) {
+    chrome.tabs.query({}, function (allTabs) {
       allTabs.forEach((tab) => {
         if (tab.id !== currentTabId) {
           try {
