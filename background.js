@@ -40,7 +40,7 @@ async function openLogoutAndClose() {
     height: 600,
     focused: false,
   });
-  await sleep(750);
+  await sleep(1000);
 }
 
 async function closeOtherTabs() {
