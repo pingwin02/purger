@@ -27,20 +27,35 @@ async function purge() {
   }
 }
 
+async function waitForTabLoaded(tabId, timeoutMs = 10000) {
+  const intervalMs = 200;
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab && tab.status === "complete") {
+      return true;
+    }
+    await sleep(intervalMs);
+  }
+  return false;
+}
+
 async function openLogoutAndClose() {
   const { logoutEnabled } = await chrome.storage.sync.get({
     logoutEnabled: true,
   });
   if (!logoutEnabled) return;
   await sleep(500);
-  await chrome.windows.create({
+  const win = await chrome.windows.create({
     url: LOGOUT_URL,
     type: "normal",
     width: 800,
     height: 600,
     focused: false,
   });
-  await sleep(1000);
+
+  const tabId = win && win.tabs && win.tabs[0] && win.tabs[0].id;
+  await waitForTabLoaded(tabId, 10000);
 }
 
 async function closeOtherTabs() {
@@ -68,16 +83,27 @@ async function notify(title, message) {
       title,
       message,
     });
-    await sleep(3000);
+    await sleep(1500);
     await chrome.notifications.clear(id);
   } catch (e) {
     console.error("Notification error:", e);
   }
 }
 
+async function openTempTab() {
+  try {
+    const tab = await chrome.tabs.create({ active: true });
+    return tab && tab.id;
+  } catch (e) {
+    console.error("Error creating temp tab:", e);
+    return null;
+  }
+}
+
 chrome.action.onClicked.addListener(async () => {
   await purge();
   await openLogoutAndClose();
+  await openTempTab();
   await closeOtherTabs();
   await purge();
   await notify(
