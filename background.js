@@ -19,8 +19,8 @@ async function purge() {
         localStorage: true,
         pluginData: true,
         serviceWorkers: true,
-        webSQL: true,
-      },
+        webSQL: true
+      }
     );
   } catch (err) {
     console.error("Browsing data error:", err || chrome.runtime.lastError);
@@ -40,9 +40,14 @@ async function waitForTabLoaded(tabId, timeoutMs = 10000) {
   return false;
 }
 
-async function openLogoutAndClose() {
+async function logout() {
+  await openLogout();
+  await openLogout();
+}
+
+async function openLogout() {
   const { logoutEnabled } = await chrome.storage.sync.get({
-    logoutEnabled: true,
+    logoutEnabled: true
   });
   if (!logoutEnabled) return;
   await sleep(500);
@@ -51,17 +56,18 @@ async function openLogoutAndClose() {
     type: "normal",
     width: 800,
     height: 600,
-    focused: false,
+    focused: false
   });
-
   const tabId = win && win.tabs && win.tabs[0] && win.tabs[0].id;
-  await waitForTabLoaded(tabId, 10000);
+  try {
+    await waitForTabLoaded(tabId, 10000);
+  } catch (e) {}
 }
 
 async function closeOtherTabs() {
   const activeTabs = await chrome.tabs.query({
     currentWindow: true,
-    active: true,
+    active: true
   });
   if (!activeTabs || !activeTabs[0]) return;
 
@@ -81,7 +87,7 @@ async function notify(title, message) {
       type: "basic",
       iconUrl: chrome.runtime.getURL("icon.png"),
       title,
-      message,
+      message
     });
     await sleep(1500);
     await chrome.notifications.clear(id);
@@ -102,12 +108,12 @@ async function openTempTab() {
 
 chrome.action.onClicked.addListener(async () => {
   await purge();
-  await openLogoutAndClose();
+  await logout();
   await openTempTab();
   await closeOtherTabs();
   await purge();
   await notify(
     "Purge complete",
-    "All data has been purged and other tabs closed.",
+    "All data has been purged and other tabs closed."
   );
 });
