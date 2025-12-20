@@ -50,7 +50,7 @@ async function openLogout() {
     logoutEnabled: true
   });
   if (!logoutEnabled) return;
-  await sleep(500);
+  await sleep(1000);
   const win = await chrome.windows.create({
     url: LOGOUT_URL,
     type: "normal",
