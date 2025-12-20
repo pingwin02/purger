@@ -28,7 +28,7 @@ async function purge() {
 }
 
 async function waitForTabLoaded(tabId, timeoutMs = 10000) {
-  const intervalMs = 200;
+  const intervalMs = 100;
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const tab = await chrome.tabs.get(tabId);
@@ -50,7 +50,6 @@ async function openLogout() {
     logoutEnabled: true
   });
   if (!logoutEnabled) return;
-  await sleep(1000);
   const win = await chrome.windows.create({
     url: LOGOUT_URL,
     type: "normal",
@@ -108,12 +107,10 @@ async function openTempTab() {
 
 chrome.action.onClicked.addListener(async () => {
   await purge();
+  await sleep(1000);
   await logout();
   await openTempTab();
   await closeOtherTabs();
   await purge();
-  await notify(
-    "Purge complete",
-    "All data has been purged and other tabs closed."
-  );
+  await notify("Purge complete", "All data has been purged and other tabs closed.");
 });
