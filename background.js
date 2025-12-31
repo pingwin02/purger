@@ -107,7 +107,6 @@ async function openTempTab() {
 
 chrome.action.onClicked.addListener(async () => {
   await purge();
-  await sleep(1000);
   await logout();
   await openTempTab();
   await closeOtherTabs();
