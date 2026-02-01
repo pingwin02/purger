@@ -30,6 +30,14 @@
         height: 32px;
       }
 
+      .option-group {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+        max-width: 400px;
+      }
+
       .option-container {
         background: #fff;
         padding: 20px 30px;
@@ -37,7 +45,23 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: space-between;
+      }
+
+      .label-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .label-group span {
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      .label-group small {
+        font-size: 12px;
+        color: #666;
+        margin-top: 4px;
       }
 
       input[type="checkbox"] {
@@ -47,19 +71,8 @@
         cursor: pointer;
       }
 
-      label {
-        font-size: 16px;
-        cursor: pointer;
-      }
-
-      p.note {
-        margin-top: 15px;
-        font-size: 12px;
-        color: #666;
-      }
-
       .footer {
-        margin-top: 20px;
+        margin-top: 30px;
         font-size: 14px;
         color: #444;
       }
@@ -75,14 +88,25 @@
     </style>
   </head>
   <body>
-    <h1><img src="icon.png" alt="Purger Icon" /> Extension Options</h1>
+    <h1><img src="icon.png" alt="Icon" /> Extension Options</h1>
 
-    <div class="option-container">
-      <input type="checkbox" id="logoutCheckbox" />
-      <label for="logoutCheckbox">Enable Google Logout</label>
+    <div class="option-group">
+      <div class="option-container">
+        <div class="label-group">
+          <label for="logoutCheckbox">Enable Google Logout</label>
+          <small>Logs out of Google account when clearing data.</small>
+        </div>
+        <input type="checkbox" id="logoutCheckbox" />
+      </div>
+
+      <div class="option-container">
+        <div class="label-group">
+          <label for="autoPurgeCheckbox">Enable Auto Purge</label>
+          <small>Uses API to clear data instead of opening Settings.</small>
+        </div>
+        <input type="checkbox" id="autoPurgeCheckbox" />
+      </div>
     </div>
-
-    <p class="note">Toggle this option to log out from Google when clicking the extension.</p>
 
     <div class="footer">
       Created by pingwin02 —

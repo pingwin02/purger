@@ -1,115 +1,136 @@
 const LOGOUT_URL = "https://accounts.google.com/Logout";
+const SETTINGS_URL = "chrome://settings/clearBrowserData";
+const ICON_PATH = "icon.png";
+const LOGOUT_RETRY_COUNT = 3;
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const PURGE_DATA_TYPES = {
+  appcache: true,
+  cache: true,
+  cacheStorage: true,
+  cookies: true,
+  downloads: true,
+  fileSystems: true,
+  formData: true,
+  history: true,
+  indexedDB: true,
+  localStorage: true,
+  pluginData: true,
+  serviceWorkers: true,
+  webSQL: true
+};
+
+const PURGE_OPTIONS = { since: 0 };
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function purge() {
   try {
-    await chrome.browsingData.remove(
-      { since: 0 },
-      {
-        appcache: true,
-        cache: true,
-        cacheStorage: true,
-        cookies: true,
-        downloads: true,
-        fileSystems: true,
-        formData: true,
-        history: true,
-        indexedDB: true,
-        localStorage: true,
-        pluginData: true,
-        serviceWorkers: true,
-        webSQL: true
-      }
-    );
-  } catch (err) {
-    console.error("Browsing data error:", err || chrome.runtime.lastError);
+    await chrome.browsingData.remove(PURGE_OPTIONS, PURGE_DATA_TYPES);
+  } catch (e) {
+    console.error(e);
   }
 }
 
-async function waitForTabLoaded(tabId, timeoutMs = 10000) {
-  const intervalMs = 100;
+async function waitForTabLoaded(tabId, timeout = 10000) {
   const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const tab = await chrome.tabs.get(tabId);
-    if (tab && tab.status === "complete") {
-      return true;
-    }
-    await sleep(intervalMs);
+  while (Date.now() - start < timeout) {
+    try {
+      if ((await chrome.tabs.get(tabId))?.status === "complete") return true;
+    } catch {}
+    await sleep(200);
   }
   return false;
 }
 
-async function logout() {
-  await openLogout();
-  await openLogout();
+async function openSettingsAndWait() {
+  const tab = await chrome.tabs.create({ url: SETTINGS_URL, active: true });
+
+  while (true) {
+    await sleep(200);
+    try {
+      const currentTab = await chrome.tabs.get(tab.id);
+      if (!currentTab.url.includes("clearBrowserData")) {
+        try {
+          await chrome.tabs.remove(tab.id);
+        } catch {}
+        break;
+      }
+    } catch {
+      break;
+    }
+  }
 }
 
-async function openLogout() {
-  const { logoutEnabled } = await chrome.storage.sync.get({
-    logoutEnabled: true
-  });
-  if (!logoutEnabled) return;
-  const win = await chrome.windows.create({
-    url: LOGOUT_URL,
-    type: "normal",
-    width: 800,
-    height: 600,
-    focused: false
-  });
-  const tabId = win && win.tabs && win.tabs[0] && win.tabs[0].id;
+async function performLogoutRequest() {
+  let win;
   try {
-    await waitForTabLoaded(tabId, 10000);
-  } catch (e) {}
+    win = await chrome.windows.create({
+      url: LOGOUT_URL,
+      type: "popup",
+      width: 100,
+      height: 100,
+      focused: false
+    });
+    const tabId = win?.tabs?.[0]?.id;
+
+    if (tabId) {
+      for (let i = 0; i < LOGOUT_RETRY_COUNT; i++) {
+        await chrome.tabs.update(tabId, { url: LOGOUT_URL });
+        await waitForTabLoaded(tabId);
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    if (win?.id) chrome.windows.remove(win.id).catch(() => {});
+  }
 }
 
-async function closeOtherTabs() {
-  const activeTabs = await chrome.tabs.query({
-    currentWindow: true,
-    active: true
-  });
-  if (!activeTabs || !activeTabs[0]) return;
-
-  const currentTabId = activeTabs[0].id;
-  const allTabs = await chrome.tabs.query({});
-
-  const closePromises = allTabs
-    .filter((tab) => tab.id !== currentTabId)
-    .map((tab) => chrome.tabs.remove(tab.id).catch(() => {}));
-
-  await Promise.all(closePromises);
+async function closeOtherTabs(keepId) {
+  await Promise.all(
+    (await chrome.tabs.query({}))
+      .filter((t) => t.id !== keepId)
+      .map((t) => chrome.tabs.remove(t.id).catch(() => {}))
+  );
 }
 
 async function notify(title, message) {
   try {
     const id = await chrome.notifications.create("", {
       type: "basic",
-      iconUrl: chrome.runtime.getURL("icon.png"),
+      iconUrl: chrome.runtime.getURL(ICON_PATH),
       title,
       message
     });
-    await sleep(1500);
-    await chrome.notifications.clear(id);
-  } catch (e) {
-    console.error("Notification error:", e);
-  }
+    setTimeout(() => chrome.notifications.clear(id), 3000);
+  } catch {}
 }
 
 async function openTempTab() {
   try {
-    const tab = await chrome.tabs.create({ active: true });
-    return tab && tab.id;
-  } catch (e) {
-    console.error("Error creating temp tab:", e);
+    return (await chrome.tabs.create({ active: true }))?.id;
+  } catch {
     return null;
   }
 }
 
 chrome.action.onClicked.addListener(async () => {
+  const { enableAutoPurge, logoutEnabled } = await chrome.storage.sync.get({
+    enableAutoPurge: false,
+    logoutEnabled: true
+  });
+
+  enableAutoPurge ? await purge() : await openSettingsAndWait();
+
+  if (logoutEnabled) await performLogoutRequest();
+
+  const newTabId = await openTempTab();
+  await closeOtherTabs(newTabId);
+
   await purge();
-  await logout();
-  await openTempTab();
-  await closeOtherTabs();
-  await purge();
-  await notify("Purge complete", "All data has been purged and other tabs closed.");
+
+  await notify(
+    "Purge complete",
+    "All data has been purged and other tabs closed."
+  );
 });

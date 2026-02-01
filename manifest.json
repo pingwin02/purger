@@ -3,7 +3,14 @@
   "name": "Purger",
   "version": "1.0",
   "description": "Purges browsing data, optionally logs out from Google, closes all other tabs, and shows a notification.",
-  "permissions": ["browsingData", "notifications", "windows", "tabs", "activeTab", "storage"],
+  "permissions": [
+    "browsingData",
+    "notifications",
+    "windows",
+    "tabs",
+    "activeTab",
+    "storage"
+  ],
   "background": {
     "service_worker": "background.js"
   },

@@ -1,11 +1,23 @@
-const checkbox = document.getElementById("logoutCheckbox");
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutCheckbox = document.getElementById("logoutCheckbox");
+  const autoPurgeCheckbox = document.getElementById("autoPurgeCheckbox");
 
-// Load saved value
-chrome.storage.sync.get({ logoutEnabled: true }, ({ logoutEnabled }) => {
-  checkbox.checked = logoutEnabled;
-});
+  chrome.storage.sync.get(
+    {
+      logoutEnabled: true,
+      enableAutoPurge: false
+    },
+    (items) => {
+      logoutCheckbox.checked = items.logoutEnabled;
+      autoPurgeCheckbox.checked = items.enableAutoPurge;
+    }
+  );
 
-// Save on change
-checkbox.addEventListener("change", () => {
-  chrome.storage.sync.set({ logoutEnabled: checkbox.checked });
+  logoutCheckbox.addEventListener("change", () => {
+    chrome.storage.sync.set({ logoutEnabled: logoutCheckbox.checked });
+  });
+
+  autoPurgeCheckbox.addEventListener("change", () => {
+    chrome.storage.sync.set({ enableAutoPurge: autoPurgeCheckbox.checked });
+  });
 });
