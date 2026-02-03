@@ -122,9 +122,10 @@ chrome.action.onClicked.addListener(async () => {
 
   enableAutoPurge ? await purge() : await openSettingsAndWait();
 
-  await sleep(500);
-
-  if (logoutEnabled) await performLogoutRequest();
+  if (logoutEnabled) {
+    await sleep(500);
+    await performLogoutRequest();
+  }
 
   const newTabId = await openTempTab();
   await closeOtherTabs(newTabId);
