@@ -123,7 +123,7 @@ chrome.action.onClicked.addListener(async () => {
   enableAutoPurge ? await purge() : await openSettingsAndWait();
 
   if (logoutEnabled) {
-    await sleep(500);
+    await sleep(1000);
     await performLogoutRequest();
   }
 
