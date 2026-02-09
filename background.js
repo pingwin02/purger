@@ -61,7 +61,7 @@ async function openSettingsAndWait() {
   }
 }
 
-async function performLogoutRequest() {
+async function performLogoutRequest(newTabId) {
   let win;
   try {
     win = await chrome.windows.create({
@@ -78,6 +78,10 @@ async function performLogoutRequest() {
         await chrome.tabs.update(tabId, { url: LOGOUT_URL });
         await waitForTabLoaded(tabId);
       }
+    }
+
+    if (newTabId) {
+      await chrome.tabs.reload(newTabId).catch(() => {});
     }
   } catch (e) {
     console.error(e);
@@ -127,7 +131,7 @@ chrome.action.onClicked.addListener(async () => {
 
   if (logoutEnabled) {
     await sleep(5000);
-    await performLogoutRequest();
+    await performLogoutRequest(newTabId);
   }
 
   await purge();
