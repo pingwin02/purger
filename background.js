@@ -130,7 +130,7 @@ chrome.action.onClicked.addListener(async () => {
   await closeOtherTabs(newTabId);
 
   if (logoutEnabled) {
-    await sleep(5000);
+    await sleep(1000);
     await performLogoutRequest(newTabId);
   }
 
