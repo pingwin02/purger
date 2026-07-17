@@ -77,6 +77,7 @@ async function performLogoutRequest(newTabId) {
       for (let i = 0; i < LOGOUT_RETRY_COUNT; i++) {
         await chrome.tabs.update(tabId, { url: LOGOUT_URL });
         await waitForTabLoaded(tabId);
+        await sleep(3000);
       }
     }
 
@@ -118,18 +119,20 @@ async function openTempTab() {
   }
 }
 
-chrome.action.onClicked.addListener(async () => {
+async function runPurgeProcess(logoutOverride = null) {
   const { enableAutoPurge, logoutEnabled } = await chrome.storage.sync.get({
     enableAutoPurge: false,
     logoutEnabled: true
   });
+
+  const shouldLogout = logoutOverride !== null ? logoutOverride : logoutEnabled;
 
   enableAutoPurge ? await purge() : await openSettingsAndWait();
 
   const newTabId = await openTempTab();
   await closeOtherTabs(newTabId);
 
-  if (logoutEnabled) {
+  if (shouldLogout) {
     await sleep(1000);
     await performLogoutRequest(newTabId);
   }
@@ -140,9 +143,21 @@ chrome.action.onClicked.addListener(async () => {
     "Purge complete",
     "All data has been purged and other tabs closed."
   );
-});
+}
+
+chrome.action.onClicked.addListener(() => runPurgeProcess());
 
 chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "purge-with-logout",
+    title: "Purge with logout",
+    contexts: ["action"]
+  });
+  chrome.contextMenus.create({
+    id: "purge-no-logout",
+    title: "Purge without logout",
+    contexts: ["action"]
+  });
   chrome.contextMenus.create({
     id: "open-logout-page",
     title: "Open Logout Page",
@@ -160,5 +175,9 @@ chrome.contextMenus.onClicked.addListener((info) => {
     chrome.tabs.create({ url: LOGOUT_URL });
   } else if (info.menuItemId === "restart-extension") {
     chrome.runtime.reload();
+  } else if (info.menuItemId === "purge-with-logout") {
+    runPurgeProcess(true);
+  } else if (info.menuItemId === "purge-no-logout") {
+    runPurgeProcess(false);
   }
 });
