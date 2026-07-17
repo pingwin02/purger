@@ -141,3 +141,24 @@ chrome.action.onClicked.addListener(async () => {
     "All data has been purged and other tabs closed."
   );
 });
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "open-logout-page",
+    title: "Open Logout Page",
+    contexts: ["action"]
+  });
+  chrome.contextMenus.create({
+    id: "restart-extension",
+    title: "Restart Extension",
+    contexts: ["action"]
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info) => {
+  if (info.menuItemId === "open-logout-page") {
+    chrome.tabs.create({ url: LOGOUT_URL });
+  } else if (info.menuItemId === "restart-extension") {
+    chrome.runtime.reload();
+  }
+});

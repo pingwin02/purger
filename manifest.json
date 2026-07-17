@@ -9,7 +9,8 @@
     "windows",
     "tabs",
     "activeTab",
-    "storage"
+    "storage",
+    "contextMenus"
   ],
   "background": {
     "service_worker": "background.js"
