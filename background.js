@@ -77,7 +77,6 @@ async function performLogoutRequest(newTabId) {
       for (let i = 0; i < LOGOUT_RETRY_COUNT; i++) {
         await chrome.tabs.update(tabId, { url: LOGOUT_URL });
         await waitForTabLoaded(tabId);
-        await sleep(3000);
       }
     }
 
